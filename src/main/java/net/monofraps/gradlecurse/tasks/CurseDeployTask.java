@@ -10,7 +10,6 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicHeader;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 
@@ -50,7 +49,7 @@ public class CurseDeployTask extends DefaultTask
     /**
      * Defaults to http://$gameHandle$.curseforge.com
      * Set this to http://dev.bukkit.org to upload to DBO.
-     *
+     * <p/>
      * $gameHandle$ will be replaced with whatever gameHandle is set to.
      */
     private String baseUrl = "http://$gameHandle$.curseforge.com";
@@ -62,7 +61,7 @@ public class CurseDeployTask extends DefaultTask
 
     /**
      * Defaults to $baseUrl$/projects/$projectName$/upload-file.json
-     *
+     * <p/>
      * $baseUrl$ will be replaced with whatever baseUrl is set to.
      * $projectName$ will be replaced with whatever projectName is set to.
      */
@@ -117,7 +116,8 @@ public class CurseDeployTask extends DefaultTask
         multipartEntityBuilder.addPart("change_log", changeLog);
         multipartEntityBuilder.addPart("file", fileBody);
 
-        for(final String gameVersion : gameVersions) {
+        for (final String gameVersion : gameVersions)
+        {
             multipartEntityBuilder.addTextBody("game_version", gameVersion);
         }
 
@@ -192,7 +192,8 @@ public class CurseDeployTask extends DefaultTask
 
     public String getUploadFileName()
     {
-        if(Strings.nullToEmpty(uploadFileName).isEmpty()) {
+        if (Strings.nullToEmpty(uploadFileName).isEmpty())
+        {
             return String.format("%s-%s", getProjectName(), getProject().getVersion());
         }
         return uploadFileName;
