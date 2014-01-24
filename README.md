@@ -21,6 +21,7 @@ Now that you have GradleCurse installed locally, you can use it in your project'
 buildscript {
     repositories {
             mavenLocal()
+            mavenCentral()
     }
     dependencies {
         classpath group: 'net.monofraps', name: 'GradleCurse', version: '1.0'
@@ -32,7 +33,7 @@ apply plugin: 'gradle-curse'
 task uploadArtifact(type: net.monofraps.gradlecurse.tasks.CurseDeployTask) {
     gameHandle = "wow"
     projectName = "my-project"
-    apiKey = "ThisKeyMusRemainSecret"
+    apiKey = "ThisKeyMustRemainSecret"
     uploadFileName = "ThisIsTheNameTheUploadedFileWillHave.zip"
     changeLog = "Enter whatever you want."
     gameVersions = ["1", "2", "3"] // TODO: explain this parameter
