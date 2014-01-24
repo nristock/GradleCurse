@@ -101,7 +101,7 @@ public class CurseDeployTask extends DefaultTask
      */
     private Object sourceObject;
 
-    private FileType fileType;
+    private FileType fileType = FileType.BETA;
 
     private Set<String> gameVersions;
 
