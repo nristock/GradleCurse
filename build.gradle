@@ -17,6 +17,8 @@
 
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
+apply plugin: 'maven'
+spply plugin: 'signing'
 
 group = 'net.monofraps'
 version = '1.0'
@@ -37,10 +39,71 @@ dependencies {
     compile localGroovy()
 }
 
+task javadocs(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sources(type: Jar) {
+    from sourceSets.main.allSources
+    classifier = 'sources'
+}
+
+signing {
+    sign counfigurations.archives
+}
+
+artifacts {
+    archives jar
+
+    archives javadocs
+    archives sources
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
             from components.java
+        }
+    }
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeplyment { MavenDeployment deployment -> signing.signPom(deployment)}
+
+            reposiroty(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            pom.project {
+                name 'GradleCurse'
+                packaging 'jar'
+                description 'GradleCurse is a gradle plugin which allows to deploy build artifacts to the Curse network.'
+                url 'http://gradlecurse.monofraps.net'
+
+                scm {
+                    url 'scm:git@github.com:Monofraps/GradleCurse.git'
+                    connection 'scm:git@github.com:Monofraps/GradleCurse.git'
+                    developerConnection 'scm:git@github.com:Monofraps/GradleCurse.git'
+                }
+
+                licences {
+                    license {
+                        name ' GNU GENERAL PUBLIC LICENSE Version 3'
+                        url 'http://www.gnu.org/licenses/gpl.txt'
+                        distribution 'repo'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'monofraps'
+                        name 'Nicolas Ristock'
+                    }
+                }
+            }
         }
     }
 }

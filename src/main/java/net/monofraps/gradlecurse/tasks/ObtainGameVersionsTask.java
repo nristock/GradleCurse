@@ -1,9 +1,10 @@
 package net.monofraps.gradlecurse.tasks;
 
-import com.google.common.base.Strings;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.monofraps.gradlecurse.extensions.CurseDeploy;
+import net.monofraps.gradlecurse.models.GameVersion;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -14,26 +15,28 @@ import org.gradle.api.tasks.TaskAction;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 /**
+ * This task will show the available game versions by sending an HTTP GET request to $baseUrl$/game-versions.json.
+ * By default it will only show the latest 3 versions. If you would like to see all available versions, create a task of
+ * this type and set the showAll property to true.
+ * <p/>
+ * The GradleCurse plugin will automatically create a default ObtainGameVersionsTask named showGameVersions.
+ *
  * @author monofraps
  */
 public class ObtainGameVersionsTask extends DefaultTask
 {
     /**
-     * The handle of the game. (e.g. wow for World of Warcraft or rom for Runes of Magic, this is the game's subdomain
-     * on Curse.
+     * Number of version to display. (e.g. 3 will show the 3 most recent versions)
+     * Set to -1 to show all versions.
+     * Defaults to 3.
      */
-    private String gameHandle;
-
-    /**
-     * Defaults to http://$gameHandle$.curseforge.com
-     * Set this to http://dev.bukkit.org to upload to DBO.
-     * <p/>
-     * $gameHandle$ will be replaced with whatever gameHandle is set to.
-     */
-    private String baseUrl = "http://$gameHandle$.curseforge.com";
+    private int numVersionsToDisplay = 3;
 
     @TaskAction
     public void obtainGameVersions()
@@ -42,7 +45,7 @@ public class ObtainGameVersionsTask extends DefaultTask
 
         try
         {
-            final HttpGet httpGet = new HttpGet(getBaseUrl() + "/game-versions.json");
+            final HttpGet httpGet = new HttpGet(((CurseDeploy) getProject().getExtensions().getByName("curseDeploy")).getBaseUrl() + "/game-versions.json");
             getLogger().info("Obtaining game versions from " + httpGet.getURI().toString());
 
             final HttpClient httpClient = new DefaultHttpClient();
@@ -66,33 +69,31 @@ public class ObtainGameVersionsTask extends DefaultTask
 
         final JsonElement response = (new JsonParser()).parse(responseString);
         final JsonObject versionAssList = response.getAsJsonObject();
+        final List<GameVersion> gameVersions = new ArrayList<GameVersion>();
 
-        // TODO: Sort by date
-        for(final Map.Entry<String, JsonElement> versionObject : versionAssList.entrySet()) {
-            getLogger().lifecycle(String.format("Version %s, released on %s", versionObject.getKey(), versionObject.getValue().getAsJsonObject().get("release_date").getAsString()));
-            getLogger().lifecycle(String.format("\tName: %s", versionObject.getValue().getAsJsonObject().get("name").getAsString()));
-            getLogger().lifecycle(String.format("\tIsDevelopment: %b", versionObject.getValue().getAsJsonObject().get("is_development").getAsBoolean()));
-            getLogger().lifecycle(String.format("\tBreaksCompatibility: %b", versionObject.getValue().getAsJsonObject().get("breaks_compatibility").getAsBoolean()));
+        for (final Map.Entry<String, JsonElement> versionObject : versionAssList.entrySet())
+        {
+            gameVersions.add(new GameVersion(versionObject.getKey(), versionObject.getValue().getAsJsonObject()));
+        }
+        Collections.sort(gameVersions);
+
+        for (final GameVersion gameVersion : (numVersionsToDisplay == -1)? gameVersions : gameVersions.subList(gameVersions.size() - 3, gameVersions.size()))
+        {
+
+            getLogger().lifecycle(String.format("Version %s, released on %s", gameVersion.getVersionNumber(), gameVersion.getReleaseDate()));
+            getLogger().lifecycle(String.format("\tName: %s", gameVersion.getName()));
+            getLogger().lifecycle(String.format("\tIsDevelopment: %b", gameVersion.isDevelopment()));
+            getLogger().lifecycle(String.format("\tBreaksCompatibility: %b", gameVersion.isBreaksCompatibility()));
         }
     }
 
-    public String getGameHandle()
+    public int getNumVersionsToDisplay()
     {
-        return Strings.nullToEmpty(gameHandle);
+        return numVersionsToDisplay;
     }
 
-    public void setGameHandle(final String gameHandle)
+    public void setNumVersionsToDisplay(final int numVersionsToDisplay)
     {
-        this.gameHandle = gameHandle;
-    }
-
-    public String getBaseUrl()
-    {
-        return baseUrl.replace("$gameHandle$", getGameHandle());
-    }
-
-    public void setBaseUrl(final String baseUrl)
-    {
-        this.baseUrl = baseUrl;
+        this.numVersionsToDisplay = numVersionsToDisplay;
     }
 }

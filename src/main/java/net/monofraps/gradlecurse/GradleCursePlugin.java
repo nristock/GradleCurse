@@ -17,10 +17,23 @@
 
 package net.monofraps.gradlecurse;
 
+import net.monofraps.gradlecurse.extensions.CurseDeploy;
+import net.monofraps.gradlecurse.tasks.CurseDeployTask;
+import net.monofraps.gradlecurse.tasks.ObtainGameVersionsTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 /**
+ * Main plugin class.
+ *
+ * The plugin automagiclly adds the curseDeploy extension to your project. It will also create two tasks.
+ *
+ * Created Tasks:<br />
+ * deployToCurse - uploads all enabled deployments defined in curseDeploy extension. See {@link net.monofraps.gradlecurse.tasks.CurseDeployTask}
+ * for more information.<br />
+ * showGameVersions - outputs the 3 latest versions of the game. See {@link net.monofraps.gradlecurse.tasks.ObtainGameVersionsTask}
+ * for more information.
+ *
  * @author monofraps
  */
 public class GradleCursePlugin implements Plugin<Project>
@@ -28,6 +41,9 @@ public class GradleCursePlugin implements Plugin<Project>
     @Override
     public void apply(final Project project)
     {
-        //TODO: noop
+        project.getExtensions().create("curseDeploy", CurseDeploy.class, project);
+
+        project.getTasks().create("deployToCurse", CurseDeployTask.class).setSingleUpload(true);
+        project.getTasks().create("showGameVersions", ObtainGameVersionsTask.class);
     }
 }

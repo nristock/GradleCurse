@@ -18,129 +18,80 @@
 package net.monofraps.gradlecurse.tasks;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import groovy.lang.Closure;
+import net.monofraps.gradlecurse.extensions.CurseDeploy;
+import net.monofraps.gradlecurse.extensions.Deployment;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Set;
 
 /**
+ * This task uploads either all enabled deployments specified in the curseDeploy extension. If you want to upload a
+ * specific artifact only create a task of this type and set the deployment property just as you would in the curseDeploy
+ * extension.
+ * <p/>
+ * The GradleCurse plugin automatically creates a default CurseDeployTask which uploads all deployments defined in curseDeploy.
+ * This task is named deployToCurse.
+ *
  * @author monofraps
  */
 public class CurseDeployTask extends DefaultTask
 {
-    public enum FileType
+    private boolean isSingleUpload = true;
+    private Deployment deployment;
+
+    @TaskAction
+    public void doWork()
     {
-        RELEASE("r"), BETA("b"), ALPHA("a");
-
-        private String stringRepresentation;
-
-        FileType(final String stringRepresentation)
+        if (isSingleUpload)
         {
-            this.stringRepresentation = stringRepresentation;
+            uploadArtifact(getDeployment());
         }
-
-        @Override
-        public String toString()
+        else
         {
-            return stringRepresentation;
+            for (final Deployment deployment : ((CurseDeploy) getProject().getExtensions().getByName("curseDeploy")).getDeployments())
+            {
+                if (deployment.isEnabled())
+                {
+                    uploadArtifact(deployment);
+                }
+            }
         }
     }
 
-    /**
-     * The handle of the game. (e.g. wow for World of Warcraft or rom for Runes of Magic, this is the game's subdomain
-     * on Curse.
-     */
-    private String gameHandle;
-
-    /**
-     * Defaults to http://$gameHandle$.curseforge.com
-     * Set this to http://dev.bukkit.org to upload to DBO.
-     * <p/>
-     * $gameHandle$ will be replaced with whatever gameHandle is set to.
-     */
-    private String baseUrl = "http://$gameHandle$.curseforge.com";
-
-    /**
-     * The name of the project to upload to.
-     */
-    private String projectName;
-
-    /**
-     * Defaults to $baseUrl$/projects/$projectName$/upload-file.json
-     * <p/>
-     * $baseUrl$ will be replaced with whatever baseUrl is set to.
-     * $projectName$ will be replaced with whatever projectName is set to.
-     */
-    private String uploadUrl = "$baseUrl$/projects/$project-name$/upload-file.json";
-
-    /**
-     * Your API key - get one here: http://www.curseforge.com/home/api-key/
-     */
-    private String apiKey;
-
-    /**
-     * Defaults to $project.name$-$project.version$
-     */
-    private String uploadFileName;
-
-    private String changeLog;
-
-    /**
-     * The file to upload
-     */
-    private Object sourceObject;
-
-    private FileType fileType = FileType.BETA;
-
-    private Set<String> gameVersions;
-
-    @TaskAction
-    public void uploadArtifact()
+    private void uploadArtifact(final Deployment deployment)
     {
-        Preconditions.checkNotNull(Strings.emptyToNull(getApiKey()), "You must specify a Curse Forge API Key. You can get one here: http://www.curseforge.com/home/api-key/");
-        Preconditions.checkNotNull(Strings.emptyToNull(getGameHandle()), "You must specify a game handle. (e.g. wow for World of Warcraft or rom for Runes of magic)");
-        Preconditions.checkNotNull(Strings.emptyToNull(getProjectName()), "You must specify a project name.");
-        Preconditions.checkNotNull(Strings.emptyToNull(getBaseUrl()), "baseUrl cannot be null or empty.");
-        Preconditions.checkNotNull(Strings.emptyToNull(getUploadUrl()), "uploadUrl cannot be null or empty.");
-        Preconditions.checkNotNull(getFileType(), "fileType must not be null.");
-        Preconditions.checkArgument(getSourceFile().exists(), "The file you wish to upload to Curse does not exist.");
-        Preconditions.checkNotNull(getGameVersions(), "gameVersions must not be null.");
-        Preconditions.checkArgument(getGameVersions().size() >= 1 && getGameVersions().size() <= 3, "You must specify between 1 to 3 game versions.");
 
         getLogger().lifecycle("Uploading to Curse...");
 
-        final StringBody name = new StringBody(uploadFileName, ContentType.DEFAULT_TEXT);
-        final StringBody fileType = new StringBody(getFileType().toString(), ContentType.DEFAULT_TEXT);
-        final StringBody changeLog = new StringBody(getChangeLog(), ContentType.DEFAULT_TEXT);
-
         //TODO: binary or app/zip, maybe an option or auto-detect from file extension ?!
-        final FileBody fileBody = new FileBody(getSourceFile(), ContentType.DEFAULT_BINARY);
+        final FileBody fileBody = new FileBody(deployment.getSourceFile(), ContentType.DEFAULT_BINARY);
 
         final MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
-        multipartEntityBuilder.addPart("name", name);
-        multipartEntityBuilder.addPart("file_type", fileType);
-        multipartEntityBuilder.addPart("change_log", changeLog);
+        multipartEntityBuilder.addTextBody("name", deployment.getUploadFileName());
+        multipartEntityBuilder.addTextBody("file_type", deployment.getFileType().toString());
+        multipartEntityBuilder.addTextBody("change_log", deployment.getChangeLog());
+        multipartEntityBuilder.addTextBody("change_markup_type", deployment.getChangeLogMarkup().toString());
+        multipartEntityBuilder.addTextBody("known_caveats", deployment.getKnownCaveats());
+        multipartEntityBuilder.addTextBody("caveats_markup_type", deployment.getCaveatMarkup().toString());
         multipartEntityBuilder.addPart("file", fileBody);
 
-        for (final String gameVersion : gameVersions)
+        for (final String gameVersion : deployment.getGameVersions())
         {
             multipartEntityBuilder.addTextBody("game_version", gameVersion);
         }
 
-        final HttpPost httpPost = new HttpPost(getUploadUrl());
+        final HttpPost httpPost = new HttpPost(deployment.getUploadUrl());
         httpPost.addHeader("User-Agent", "GradleCurse Uploader");
-        httpPost.addHeader("X-API-Key", getApiKey());
+        httpPost.addHeader("X-API-Key", deployment.getApiKey());
         httpPost.setEntity(multipartEntityBuilder.build());
 
         try
@@ -154,115 +105,34 @@ public class CurseDeployTask extends DefaultTask
         {
             e.printStackTrace();
         }
-
     }
 
-    public String getGameHandle()
+    public Deployment getDeployment()
     {
-        return gameHandle;
+        Preconditions.checkNotNull(deployment, "CurseDeployTask parameter deployment must not be null if task is in single upload mode.");
+        return deployment;
     }
 
-    public void setGameHandle(final String gameHandle)
+    public CurseDeployTask deployment(final Closure closure)
     {
-        this.gameHandle = gameHandle;
-    }
-
-    public String getBaseUrl()
-    {
-        return baseUrl.replace("$gameHandle$", getGameHandle());
-    }
-
-    public void setBaseUrl(final String baseUrl)
-    {
-        this.baseUrl = baseUrl;
-    }
-
-    public String getProjectName()
-    {
-        return projectName;
-    }
-
-    public void setProjectName(final String projectName)
-    {
-        this.projectName = projectName;
-    }
-
-    public String getUploadUrl()
-    {
-        return uploadUrl.replace("$baseUrl$", getBaseUrl()).replace("$projectName$", getProjectName());
-    }
-
-    public void setUploadUrl(final String uploadUrl)
-    {
-        this.uploadUrl = uploadUrl;
-    }
-
-    public String getApiKey()
-    {
-        return apiKey;
-    }
-
-    public void setApiKey(final String apiKey)
-    {
-        this.apiKey = apiKey;
-    }
-
-    public String getUploadFileName()
-    {
-        if (Strings.nullToEmpty(uploadFileName).isEmpty())
+        deployment = new Deployment((CurseDeploy) getProject().getExtensions().getByName("curseDeploy"), getProject());
+        if (closure != null)
         {
-            return String.format("%s-%s", getProjectName(), getProject().getVersion());
+            closure.setDelegate(deployment);
+            closure.setResolveStrategy(Closure.DELEGATE_ONLY);
+            closure.run();
         }
-        return uploadFileName;
+
+        return this;
     }
 
-    public void setUploadFileName(final String uploadFileName)
+    public boolean isSingleUpload()
     {
-        this.uploadFileName = uploadFileName;
+        return isSingleUpload;
     }
 
-    public String getChangeLog()
+    public void setSingleUpload(final boolean isSingleUpload)
     {
-        return changeLog;
-    }
-
-    public void setChangeLog(final String changeLog)
-    {
-        this.changeLog = changeLog;
-    }
-
-    public Object getSourceObject()
-    {
-        return sourceObject;
-    }
-
-    public File getSourceFile()
-    {
-        return getProject().file(sourceObject);
-    }
-
-    public void setSourceObject(final Object sourceObject)
-    {
-        this.sourceObject = sourceObject;
-    }
-
-    public FileType getFileType()
-    {
-        return fileType;
-    }
-
-    public void setFileType(final FileType fileType)
-    {
-        this.fileType = fileType;
-    }
-
-    public Set<String> getGameVersions()
-    {
-        return gameVersions;
-    }
-
-    public void setGameVersions(final Set<String> gameVersions)
-    {
-        this.gameVersions = gameVersions;
+        this.isSingleUpload = isSingleUpload;
     }
 }
