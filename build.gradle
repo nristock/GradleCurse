@@ -18,7 +18,7 @@
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 apply plugin: 'maven'
-spply plugin: 'signing'
+apply plugin: 'signing'
 
 group = 'net.monofraps'
 version = '1.0'
@@ -39,25 +39,25 @@ dependencies {
     compile localGroovy()
 }
 
-task javadocs(type: Jar, dependsOn: javadoc) {
+task javadocsJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
     from 'build/docs/javadoc'
 }
 
-task sources(type: Jar) {
-    from sourceSets.main.allSources
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
     classifier = 'sources'
 }
 
 signing {
-    sign counfigurations.archives
+    sign configurations.archives
 }
 
 artifacts {
     archives jar
 
-    archives javadocs
-    archives sources
+    archives javadocsJar
+    archives sourcesJar
 }
 
 publishing {
@@ -71,9 +71,9 @@ publishing {
 uploadArchives {
     repositories {
         mavenDeployer {
-            beforeDeplyment { MavenDeployment deployment -> signing.signPom(deployment)}
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-            reposiroty(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
                 authentication(userName: sonatypeUsername, password: sonatypePassword)
             }
 
@@ -89,9 +89,9 @@ uploadArchives {
                     developerConnection 'scm:git@github.com:Monofraps/GradleCurse.git'
                 }
 
-                licences {
+                licenses {
                     license {
-                        name ' GNU GENERAL PUBLIC LICENSE Version 3'
+                        name 'GNU GENERAL PUBLIC LICENSE Version 3'
                         url 'http://www.gnu.org/licenses/gpl.txt'
                         distribution 'repo'
                     }
