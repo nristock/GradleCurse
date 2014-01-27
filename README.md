@@ -7,25 +7,20 @@ How to use
 ----------
 **Note**: *This Gradle plugin is still in beta which means that it might be unstable or not working at all - please file a bug report including the error/exception if you experience any issues. Furthermore, some features are incomplete or not well documented. Please visit: http://www.curseforge.com/wiki/projects/uploading-through-a-script/ or check out the source to see which upload parameters are available/what the parameters mean. A full documentation will be published once the plugin in stable.*
 
-Clone this repository and run `gradle publishToMavenLocal` to install this plugin locally (I'm working on getting it into maven central)
-
-```Bash
-git clone https://github.com/Monofraps/GradleCurse.git
-cd GradleCurse
-gralde publishToMavenLocal
-```
-
-Now that you have GradleCurse installed locally, you can use it in your project's build script.
+The latest snapshot build of the GradleCurse plugin is available in the OSS Sonatype Snapshots Repository: https://oss.sonatype.org/content/groups/public
+As soon as I have a stable version ready, it will also be available through Maven Central.
 
 **gradle.build example**
 ```Groovy
 buildscript {
     repositories {
-            mavenLocal()
             mavenCentral()
+            maven {
+                url 'https://oss.sonatype.org/content/groups/public'
+            }
     }
     dependencies {
-        classpath group: 'net.monofraps', name: 'GradleCurse', version: '1.0'
+        classpath group: 'net.monofraps', name: 'GradleCurse', version: '1.0-SNAPSHOT'
     }
 }
 

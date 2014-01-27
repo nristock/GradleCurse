@@ -23,6 +23,12 @@ apply plugin: 'signing'
 group = 'net.monofraps'
 version = '1.0'
 
+gradle.taskGraph.whenReady {taskGraph ->
+    if(!taskGraph.hasTask(release)) {
+        version += '-SNAPSHOT'
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -68,12 +74,23 @@ publishing {
     }
 }
 
+task snapshot(dependsOn: 'uploadArchives') << {
+    println 'Snapshot deploy!'
+}
+
+task release(dependsOn: 'uploadArchives') << {
+    println 'Release deploy!'
+}
+
 uploadArchives {
     repositories {
         mavenDeployer {
             beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2") {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots") {
                 authentication(userName: sonatypeUsername, password: sonatypePassword)
             }
 
