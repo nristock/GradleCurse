@@ -1,0 +1,93 @@
+@navBackground: #428ac9;
+@navHeight: 44px;
+
+@bodyNavOffset: 10px;
+
+body {
+  padding-top: @navHeight + @bodyNavOffset;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .2);
+}
+
+.top-nav {
+  background-color: @navBackground;
+
+  height: @navHeight;
+
+  box-shadow: 0 3px 7px rgba(0, 0, 0, .3);
+
+  .top-nav-element {
+    font-size: 17px;
+  }
+}
+
+.top-nav .nav > li {
+  float: left;
+
+  a {
+    -webkit-transition: color .5s;
+    -moz-transition: color .5s;
+    -ms-transition: color .5s;
+    -o-transition: color .5s;
+    transition: color .5s;
+
+    color: rgba(240, 240, 240, .8);
+
+    &:hover {
+      background-color: @navBackground;
+      color: #ffffff;
+    }
+  }
+
+  &.active {
+    a {
+    color: #ffffff;
+    }
+
+    &:after {
+      color: white;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      display: block;
+      content: " ";
+      width: 0;
+      height: 0;
+      margin-left: -5px;
+      vertical-align: middle;
+      border-right: 5px solid transparent;
+      border-left: 5px solid transparent;
+      border-bottom: 5px solid;
+    }
+  }
+}
+
+.doc-entry {
+  margin-bottom: 20px;
+
+  h1 {
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(30, 30, 30, .2);
+
+    margin-top: 0;
+    padding-top: @navHeight;
+  }
+}
+
+.head {
+  h1 {
+    font-size: 50px;
+    font-weight: bold;
+  }
+}
+
+pre {
+  margin-bottom: 30px !important;
+}
+
+code {
+  color: black;
+}
+
+.footer {
+  height: 230px;
+}

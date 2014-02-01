@@ -1,11 +1,163 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GradleCurse</title>
+
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/style.css"/>
+    <link rel="stylesheet" href="css/prism.css"/>
 </head>
-<body>
-<h1>GradleCurse Gradle plugin</h1>
-<p>This page is a placeholder. Please check out the
-    <a href="https://github.com/Monofraps/GradleCurse/blob/master/README.md">Readme file</a> on the project's repository
-    to get usage information for now.</p>
+<body data-spy="scroll" data-target=".top-nav" data-offset="0">
+
+<div class="wrapper">
+    <div class="container nc" id="nav-container">
+        <nav class="top-nav navbar-fixed-top" role="navigation">
+            <div class="container">
+                <ul class="nav">
+                    <li><a class="top-nav-element" href="#basic-usage">Basic Usage</a></li>
+                    <li><a class="top-nav-element" href="#configuration-options">Configuration Options</a></li>
+                    <li><a class="top-nav-element" href="#default-tasks">Default Tasks</a></li>
+                    <li><a class="top-nav-element" href="#dbo-deployment">DBO Deployment</a></li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+
+    <div class="container head">
+        <h1>GradleCurse <small>Curse deployment made easy</small></h1>
+        <p class="lead">GradleCurse allows you to deploy your plugins and addons to the Curse network and dev.bukkit.org
+        using the Gradle build tool.</p>
+    </div>
+
+    <div class="container">
+        <div class="doc-entry">
+            <h1 id="basic-usage">Basic Usage</h1>
+            <p>
+            GradleCurse is a Gradle plugin which means you will have to add the classpath dependency to you build script.
+            I am currently hosting all available build on Sonatype's snapshot repository. Release builds will be synced to
+            the Maven central repository once they are available. However, for now you will also have to add the Sonatype
+            repo to your build script repositories.
+            </p>
+
+            <b>gradle.build exmaple</b>
+            <pre><code class="language-groovy">
+buildscript {
+    repositories {
+        mavenCentral()
+        maven {
+            url 'https://oss.sonatype.org/content/groups/public'
+        }
+    }
+    dependencies {
+        classpath group: 'net.monofraps', name: 'GradleCurse', version: '1.0-SNAPSHOT'
+    }
+}
+
+apply plugin: 'gradle-curse'
+            </code></pre>
+
+            <p>The next step is to configure the curseDeploy object. The following is the most basic configuration.</p>
+
+            <pre><code class="language-groovy">
+curseDeploy {
+    gameHandle = 'wow'
+
+    deployment {
+        curseProjectName = 'my-project'
+        apiKey = 'KeepThisApiKeySecret'
+        uploadFileName = 'TheNameTheFileWillHaveOnCurse.zip'
+        file = 'build/libs/my-plugin.jar'
+        gameVersions = [1, 2, 3]
+    }
+}
+            </code></pre>
+
+            <p>To upload your artifact to your project's Curse page you can now simply run</p>
+            <pre><code class="language-bash">gradle deployToCurse</code></pre>
+        </div>
+        <div class="doc-entry">
+            <h1 id="configuration-options">Configuration Options</h1>
+
+            <p>
+                The curseDeploy project property extension object provides several different options to configure the
+                plugin.
+            </p>
+
+            <ul>
+                <li>
+                    <code class="language-bash">gameHandle</code> (required) - the short name of the game you're
+                    developing for (e.g. wow for World of Warcraft, rom for Runes of Magic)
+                </li>
+                <li><code class="language-bash">baseUrl</code> (optional) - the base URL to use when getting game
+                    version information and uploading. $gameHandle$ will be replaced with whatever gameHandle is set to.
+                </li>
+                <li><code class="language-bash">deployment</code>
+                    <ul>
+                        <li><code class="language-bash">enabled</code> (optional, defaults to true) - only enabled deployments are uploaded to Curse.</li>
+                        <li><code class="language-bash">curseProjectName</code> (required) - the slug of your project.</li>
+                        <li><code class="language-bash">uploadUrl</code> (optional) - the URL to use for uploading. $baseUrl$ will be replaced with whatever baseUrl is set to. $projectName$ will be replaced with whatever projectName is set to.</li>
+                        <li><code class="language-bash">apiKey</code> (required) -  your CurseForge API key. Get your API key here: http://www.curseforge.com/home/api-key/</li>
+                        <li><code class="language-bash">uploadFileName</code> (optional, defaults to $project.name$-$project.version$) - the name of the uploaded file. This will show up on the download page.</li>
+                        <li><code class="language-bash">changeLog</code> (optional) - a change log. THis will show up on the download page.</li>
+                        <li><code class="language-bash">knownCaveats</code> (optional) - any known caveats. This will show up the download page.</li>
+                        <li><code class="language-bash">changeLogMarkup</code> (optional) - the markup used for the changeLog.</li>
+                        <li><code class="language-bash">caveatsMarkup</code> (optional) - the markup used for knownCaveats.</li>
+                        <li><code class="language-bash">file</code> (required) - the file to upload.</li>
+                        <li><code class="language-bash">fileType</code> (optional, defaults to BETA) - type of file you want to upload. This will show up on the download page.</li>
+                        <li><code class="language-bash">gameVersions</code> (required) - a list of 1 - 3 compatible game versions. You can use the showGameVersions task to display the 3 latest versions.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h2>Markup Types</h2>
+            <p>Markup types are defined in <code class="language-java">net.monofraps.gradlecurse.MarkupType</code></p>
+            <ul>
+                <li><code class="language-java">PLAIN</code></li>
+                <li><code class="language-java">CREOLE</code></li>
+            </ul>
+
+            <h2>File Types</h2>
+            <p>File types are defined in <code class="language-java">net.monofraps.gradlecurse.FileType</code></p>
+            <ul>
+                <li><code class="language java">RELEASE</code></li>
+                <li><code class="language java">BETA</code></li>
+                <li><code class="language java">ALPHA</code></li>
+            </ul>
+        </div>
+
+        <div class="doc-entry">
+            <h1 id="default-tasks">Default Tasks</h1>
+
+            <p>The GradleCurse plugin automagically creates two tasks.</p>
+
+            <ul>
+                <li><code class="language-groovy">showGameVersions</code> - shows the latest 3 versions of the game you're developing for.</li>
+                <li><code class="language-groovy">deployToCurse</code> - uploads all (enabled) deployments defined in <code class="language-groovy">curseDeploy</code> to Curse.</li>
+            </ul>
+        </div>
+
+        <div class="doc-entry">
+            <h1 id="dbo-deployment">How to deploy to dev.bukkit.org</h1>
+
+            <p>Fortunately, dev.bukkit.org is part of the Curse network which means they provide the same web API. To make this plugin work with DBO, simply set <code class="language-java">baseUrl</code> to <code class="language-bash">http://dev.bukkit.org</code></p>
+
+            <ul>
+                <li><code class="language-groovy">showGameVersions</code> - shows the latest 3 versions of the game you're developing for.</li>
+                <li><code class="language-groovy">deployToCurse</code> - uploads all (enabled) deployments defined in <code class="language-groovy">curseDeploy</code> to Curse.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+
+</div>
+
+<script src="http://code.jquery.com/jquery-2.1.0.min.js"></script>
+<script src="http://netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
+<script src="js/prism.js"></script>
+
 </body>
 </html>
