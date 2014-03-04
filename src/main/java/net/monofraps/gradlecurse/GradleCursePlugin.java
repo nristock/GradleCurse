@@ -43,7 +43,7 @@ public class GradleCursePlugin implements Plugin<Project>
     {
         project.getExtensions().create("curseDeploy", CurseDeploy.class, project);
 
-        project.getTasks().create("deployToCurse", CurseDeployTask.class).setSingleUpload(true);
+        project.getTasks().create("deployToCurse", CurseDeployTask.class).setSingleUpload(false);
         project.getTasks().create("showGameVersions", ObtainGameVersionsTask.class);
     }
 }

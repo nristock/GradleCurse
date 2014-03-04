@@ -21,6 +21,7 @@ import com.google.common.base.Preconditions;
 import groovy.lang.Closure;
 import net.monofraps.gradlecurse.extensions.CurseDeploy;
 import net.monofraps.gradlecurse.extensions.Deployment;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
@@ -28,6 +29,9 @@ import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.LaxRedirectStrategy;
+import org.apache.http.util.EntityUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 
@@ -69,11 +73,11 @@ public class CurseDeployTask extends DefaultTask
 
     private void uploadArtifact(final Deployment deployment)
     {
-
         getLogger().lifecycle("Uploading to Curse...");
+        getLogger().lifecycle(deployment.toString());
 
         //TODO: binary or app/zip, maybe an option or auto-detect from file extension ?!
-        final FileBody fileBody = new FileBody(deployment.getSourceFile(), ContentType.DEFAULT_BINARY);
+        final FileBody fileBody = new FileBody(deployment.getSourceFile(), ContentType.DEFAULT_BINARY, deployment.getSourceFile().getName());
 
         final MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
         multipartEntityBuilder.addTextBody("name", deployment.getUploadFileName());
@@ -83,20 +87,16 @@ public class CurseDeployTask extends DefaultTask
         multipartEntityBuilder.addTextBody("known_caveats", deployment.getKnownCaveats());
         multipartEntityBuilder.addTextBody("caveats_markup_type", deployment.getCaveatMarkup().toString());
         multipartEntityBuilder.addPart("file", fileBody);
-
-        for (final String gameVersion : deployment.getGameVersions())
-        {
-            multipartEntityBuilder.addTextBody("game_version", gameVersion);
-        }
+        multipartEntityBuilder.addTextBody("game_versions", StringUtils.join(deployment.getGameVersions(), ","));
 
         final HttpPost httpPost = new HttpPost(deployment.getUploadUrl());
-        httpPost.addHeader("User-Agent", "GradleCurse Uploader");
+        httpPost.addHeader("User-Agent", "GradleCurse Uploader/1.0");
         httpPost.addHeader("X-API-Key", deployment.getApiKey());
         httpPost.setEntity(multipartEntityBuilder.build());
 
         try
         {
-            final HttpClient httpClient = new DefaultHttpClient();
+            final HttpClient httpClient = HttpClientBuilder.create().setRedirectStrategy(new LaxRedirectStrategy()).build();
             final HttpResponse httpResponse = httpClient.execute(httpPost);
 
             getLogger().lifecycle("Curse Upload: " + httpResponse.getStatusLine());

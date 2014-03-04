@@ -17,13 +17,16 @@
 
 package net.monofraps.gradlecurse.extensions;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import net.monofraps.gradlecurse.FileType;
 import net.monofraps.gradlecurse.MarkupType;
+import org.apache.commons.lang.builder.ToStringBuilder;
 import org.gradle.api.Project;
 
 import java.io.File;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -47,7 +50,7 @@ public class Deployment
      * $baseUrl$ will be replaced with whatever baseUrl is set to.
      * $projectName$ will be replaced with whatever projectName is set to.
      */
-    private String uploadUrl = "$baseUrl$/projects/$project-name$/upload-file.json";
+    private String uploadUrl = "$baseUrl$/projects/$projectName$/upload-file.json";
 
     /**
      * Your API key - get one here: http://www.curseforge.com/home/api-key/ (required)
@@ -91,7 +94,7 @@ public class Deployment
      */
     private FileType fileType = FileType.BETA;
 
-    private Set<String> gameVersions;
+    private Set<Object> gameVersions;
 
     public Deployment(final CurseDeploy parent, final Project project)
     {
@@ -225,11 +228,31 @@ public class Deployment
     {
         Preconditions.checkNotNull(gameVersions, "Parameter gameVersions must not be null.");
         Preconditions.checkArgument(gameVersions.size() >= 1 && gameVersions.size() <= 3, "You have to specify 1 - 3 compatible game versions.");
-        return gameVersions;
+
+        final Set<String> versions = new HashSet<String>();
+        for(final Object entry : gameVersions) {
+            versions.add(entry.toString());
+        }
+        return versions;
     }
 
-    public void setGameVersions(final Set<String> gameVersions)
+    public void setGameVersions(final Set<Object> gameVersions)
     {
         this.gameVersions = gameVersions;
+    }
+
+    @Override
+    public String toString()
+    {
+        return Objects.toStringHelper(this)
+                .add("curseProjectName", getCurseProjectName())
+                .add("uploadUrl", getUploadUrl())
+                .add("apiKey", getApiKey())
+                .add("uploadFileName", getUploadFileName())
+                .add("caveatMarkup", getCaveatMarkup())
+                .add("changeLogMarkup", getChangeLogMarkup())
+                .add("fileType", getFileType().toString())
+                .add("gameVersions", getGameVersions())
+                .toString();
     }
 }
