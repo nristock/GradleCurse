@@ -24,7 +24,7 @@ package net.monofraps.gradlecurse;
  */
 public enum MarkupType
 {
-    CREOLE("creole"), PLAIN("plain");
+    CREOLE("creole"), PLAIN("plain"), MARKDOWN("markdown"), BBCODE("bbcode"),SAFEHTML("html");
 
     private String stringRepresentation;
 
