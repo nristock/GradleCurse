@@ -31,6 +31,7 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.LaxRedirectStrategy;
+import org.apache.http.util.EntityUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 
@@ -99,6 +100,7 @@ public class CurseDeployTask extends DefaultTask
             final HttpResponse httpResponse = httpClient.execute(httpPost);
 
             getLogger().lifecycle("Curse Upload: " + httpResponse.getStatusLine());
+            getLogger().debug(EntityUtils.toString(httpResponse.getEntity()));
         }
         catch (IOException e)
         {
