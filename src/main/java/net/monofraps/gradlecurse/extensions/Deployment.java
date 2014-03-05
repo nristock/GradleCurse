@@ -247,7 +247,6 @@ public class Deployment
         return Objects.toStringHelper(this)
                 .add("curseProjectName", getCurseProjectName())
                 .add("uploadUrl", getUploadUrl())
-                .add("apiKey", getApiKey())
                 .add("uploadFileName", getUploadFileName())
                 .add("caveatMarkup", getCaveatMarkup())
                 .add("changeLogMarkup", getChangeLogMarkup())

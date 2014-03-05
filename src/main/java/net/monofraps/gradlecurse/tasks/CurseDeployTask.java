@@ -24,14 +24,13 @@ import net.monofraps.gradlecurse.extensions.Deployment;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.LaxRedirectStrategy;
-import org.apache.http.util.EntityUtils;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.TaskAction;
 
@@ -73,8 +72,8 @@ public class CurseDeployTask extends DefaultTask
 
     private void uploadArtifact(final Deployment deployment)
     {
-        getLogger().lifecycle("Uploading to Curse...");
-        getLogger().lifecycle(deployment.toString());
+        getLogger().lifecycle("Curse Upload: " + "Uploading to Curse...");
+        getLogger().lifecycle("Curse Upload: " + deployment.toString());
 
         //TODO: binary or app/zip, maybe an option or auto-detect from file extension ?!
         final FileBody fileBody = new FileBody(deployment.getSourceFile(), ContentType.DEFAULT_BINARY, deployment.getSourceFile().getName());
@@ -89,14 +88,14 @@ public class CurseDeployTask extends DefaultTask
         multipartEntityBuilder.addPart("file", fileBody);
         multipartEntityBuilder.addTextBody("game_versions", StringUtils.join(deployment.getGameVersions(), ","));
 
-        final HttpPost httpPost = new HttpPost(deployment.getUploadUrl());
-        httpPost.addHeader("User-Agent", "GradleCurse Uploader/1.0");
-        httpPost.addHeader("X-API-Key", deployment.getApiKey());
-        httpPost.setEntity(multipartEntityBuilder.build());
-
         try
         {
-            final HttpClient httpClient = HttpClientBuilder.create().setRedirectStrategy(new LaxRedirectStrategy()).build();
+            final HttpPost httpPost = new HttpPost(probeForRedirect(deployment));
+            httpPost.addHeader("User-Agent", "GradleCurse Uploader/1.0");
+            httpPost.addHeader("X-API-Key", deployment.getApiKey());
+            httpPost.setEntity(multipartEntityBuilder.build());
+
+            final HttpClient httpClient = HttpClientBuilder.create().build();
             final HttpResponse httpResponse = httpClient.execute(httpPost);
 
             getLogger().lifecycle("Curse Upload: " + httpResponse.getStatusLine());
@@ -104,6 +103,31 @@ public class CurseDeployTask extends DefaultTask
         catch (IOException e)
         {
             e.printStackTrace();
+        }
+    }
+
+    private String probeForRedirect(final Deployment deployment) throws IOException
+    {
+        getLogger().lifecycle("Curse Upload: Checking for HTTP301/redirect on " + deployment.getUploadUrl());
+
+        final HttpPost httpPost = new HttpPost(deployment.getUploadUrl());
+        httpPost.addHeader("User-Agent", "GradleCurse Uploader/1.0");
+        httpPost.addHeader("X-API-Key", deployment.getApiKey());
+
+        final HttpClient httpClient = HttpClientBuilder.create().build();
+        final HttpResponse httpResponse = httpClient.execute(httpPost);
+        getLogger().lifecycle("Curse Upload: " + httpResponse.getStatusLine().toString());
+
+        if (httpResponse.getStatusLine().getStatusCode() == 301)
+        {
+            final String newLocation = httpResponse.getHeaders("Location")[0].getValue();
+            getLogger().lifecycle("Curse Upload: " + "Detected redirect to " + newLocation);
+            return newLocation;
+        }
+        else
+        {
+            getLogger().lifecycle("Curse Upload: " + "No redirect.");
+            return deployment.getUploadUrl();
         }
     }
 
