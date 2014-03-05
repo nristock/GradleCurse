@@ -77,7 +77,7 @@ public class CurseDeployTask extends DefaultTask
         getLogger().lifecycle("Curse Upload: " + deployment.toString());
 
         //TODO: binary or app/zip, maybe an option or auto-detect from file extension ?!
-        final FileBody fileBody = new FileBody(deployment.getSourceFile(), ContentType.DEFAULT_BINARY, deployment.getSourceFile().getName());
+        final FileBody fileBody = new FileBody(deployment.getSourceFile(), ContentType.DEFAULT_BINARY, deployment.getUploadFileName());
 
         final MultipartEntityBuilder multipartEntityBuilder = MultipartEntityBuilder.create();
         multipartEntityBuilder.addTextBody("name", deployment.getUploadFileName());
