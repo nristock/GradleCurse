@@ -66,6 +66,9 @@ Markup types are defined by enum net.monofraps.gradlecurse.MarkupType
 
 * PLAIN
 * CREOLE
+* MARKDOWN
+* BBCODE
+* SAFEHTML
 
 **Available File Types**:
 File types are defined by enum net.monofraps.gradlecurse.FileType
@@ -85,3 +88,8 @@ How to deploy to dev.bukkit.org
 -------------------------------
 Since dev.bukkit.org is part of the Curse network you can use this plugin to publish Bukkit plugins as well. Simply set
 `baseUrl` to `http://dev.bukkit.org`.
+
+Contributors
+------------
+* Monofraps (Lead Developer)
+* nekosune (Contributor)
