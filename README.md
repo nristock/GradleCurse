@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/Monofraps/GradleCurse.png?branch=master)](https://travis-ci.org/Monofraps/GradleCurse)
 GradleCurse
 ===========
 
