@@ -56,8 +56,10 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
 }
 
-signing {
-    sign configurations.archives
+if (project.hasProperty('doSign') && doSign) {
+    signing {
+        sign configurations.archives
+    }
 }
 
 artifacts {
