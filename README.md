@@ -46,21 +46,21 @@ If you run `gradle deployToCurse` now the plugin should upload to your project's
 Plugin Configuration
 --------------------
 * `curseDeploy`
- * `gameHandle` (required) - the short name of the game you're developing for (e.g. wow for World of Warcraft, rom for Runes of Magic)
- * `baseUrl` - the base URL to use when getting game version information and uploading. $gameHandle$ will be replaced with whatever gameHandle is set to.
- * `deployment`
-  * `enabled` (defaults to true) - only enabled deployments are uploaded to Curse
-  * `curseProjectName` (required) - the slug of your project
-  * `uploadUrl` - the URL to use for uploading. $baseUrl$ will be replaced with whatever baseUrl is set to. $projectName$ will be replaced with whatever projectName is set to.
-  * `apiKey` (required) - your CurseForge API key. Get your API key here: http://www.curseforge.com/home/api-key/
-  * `uploadFileName` (defaults to $project.name$-$project.version$) - the name of the uploaded file. This will show up on the download page.
-  * `changeLog` - the change log. This will show up on the download page.
-  * `knownCaveats` - any known caveats. This will show up the download page.
-  * `changeLogMarkup` - the markup used for the changeLog.
-  * `caveatMarkup` - the markup used for knownCaveats.
-  * `file` - the file to upload.
-  * `fileType` - type of the file you want to upload. This will show up on the download page.
-  * `gameVersions` - a list of 1 - 3 compatible game versions
+  * `gameHandle` (required) - the short name of the game you're developing for (e.g. wow for World of Warcraft, rom for Runes of Magic)
+  * `baseUrl` - the base URL to use when getting game version information and uploading. $gameHandle$ will be replaced with whatever gameHandle is set to.
+  * `deployment`
+    * `enabled` (defaults to true) - only enabled deployments are uploaded to Curse
+    * `curseProjectName` (required) - the slug of your project
+    * `uploadUrl` - the URL to use for uploading. $baseUrl$ will be replaced with whatever baseUrl is set to. $projectName$ will be replaced with whatever projectName is set to.
+    * `apiKey` (required) - your CurseForge API key. Get your API key here: http://www.curseforge.com/home/api-key/
+    * `uploadFileName` (defaults to $project.name$-$project.version$) - the name of the uploaded file. This will show up on the download page.
+    * `changeLog` - the change log. This will show up on the download page.
+    * `knownCaveats` - any known caveats. This will show up the download page.
+    * `changeLogMarkup` - the markup used for the changeLog.
+    * `caveatMarkup` - the markup used for knownCaveats.
+    * `file` - the file to upload.
+    * `fileType` - type of the file you want to upload. This will show up on the download page.
+    * `gameVersions` - a list of 1 - 3 compatible game versions
 
 **Available Markup Types**:
 Markup types are defined by enum net.monofraps.gradlecurse.MarkupType
